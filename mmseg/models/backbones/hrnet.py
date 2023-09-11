@@ -8,7 +8,7 @@ from mmseg.ops import Upsample, resize
 from mmseg.utils import get_root_logger
 from ..builder import BACKBONES
 from .resnet import BasicBlock, Bottleneck
-
+import pdb
 
 class HRModule(nn.Module):
     """High-Resolution Module for HRNet.
@@ -41,7 +41,9 @@ class HRModule(nn.Module):
         self.branches = self._make_branches(num_branches, blocks, num_blocks,
                                             num_channels)
         self.fuse_layers = self._make_fuse_layers()
-        self.relu = nn.ReLU(inplace=False)
+        self.relu = nn.ReLU()
+
+        # xxxx8888 ===> pdb.set_trace()
 
     def _check_branches(self, num_branches, num_blocks, in_channels,
                         num_channels):
@@ -176,7 +178,7 @@ class HRModule(nn.Module):
                                         bias=False),
                                     build_norm_layer(self.norm_cfg,
                                                      in_channels[j])[1],
-                                    nn.ReLU(inplace=False)))
+                                    nn.ReLU()))
                     fuse_layer.append(nn.Sequential(*conv_downsamples))
             fuse_layers.append(nn.ModuleList(fuse_layer))
 
@@ -184,14 +186,14 @@ class HRModule(nn.Module):
 
     def forward(self, x):
         """Forward function."""
-        if self.num_branches == 1:
+        if self.num_branches == 1: # False
             return [self.branches[0](x[0])]
 
         for i in range(self.num_branches):
             x[i] = self.branches[i](x[i])
 
         x_fuse = []
-        for i in range(len(self.fuse_layers)):
+        for i in range(len(self.fuse_layers)): # len(self.fuse_layers) -- 2
             y = 0
             for j in range(self.num_branches):
                 if i == j:
@@ -205,67 +207,18 @@ class HRModule(nn.Module):
                 else:
                     y += self.fuse_layers[i][j](x[j])
             x_fuse.append(self.relu(y))
+
+        # (Pdb) len(x_fuse), x_fuse[0].size(), x_fuse[1].size()
+        # (2, [33, 18, 32, 32], [33, 36, 16, 16])
         return x_fuse
 
-
+# xxxx1111
 @BACKBONES.register_module()
 class HRNet(nn.Module):
     """HRNet backbone.
 
     High-Resolution Representations for Labeling Pixels and Regions
     arXiv: https://arxiv.org/abs/1904.04514
-
-    Args:
-        extra (dict): detailed configuration for each stage of HRNet.
-        in_channels (int): Number of input image channels. Normally 3.
-        conv_cfg (dict): dictionary to construct and config conv layer.
-        norm_cfg (dict): dictionary to construct and config norm layer.
-        norm_eval (bool): Whether to set norm layers to eval mode, namely,
-            freeze running stats (mean and var). Note: Effect on Batch Norm
-            and its variants only.
-        with_cp (bool): Use checkpoint or not. Using checkpoint will save some
-            memory while slowing down the training speed.
-        zero_init_residual (bool): whether to use zero init for last norm layer
-            in resblocks to let them behave as identity.
-
-    Example:
-        >>> from mmseg.models import HRNet
-        >>> import torch
-        >>> extra = dict(
-        >>>     stage1=dict(
-        >>>         num_modules=1,
-        >>>         num_branches=1,
-        >>>         block='BOTTLENECK',
-        >>>         num_blocks=(4, ),
-        >>>         num_channels=(64, )),
-        >>>     stage2=dict(
-        >>>         num_modules=1,
-        >>>         num_branches=2,
-        >>>         block='BASIC',
-        >>>         num_blocks=(4, 4),
-        >>>         num_channels=(32, 64)),
-        >>>     stage3=dict(
-        >>>         num_modules=4,
-        >>>         num_branches=3,
-        >>>         block='BASIC',
-        >>>         num_blocks=(4, 4, 4),
-        >>>         num_channels=(32, 64, 128)),
-        >>>     stage4=dict(
-        >>>         num_modules=3,
-        >>>         num_branches=4,
-        >>>         block='BASIC',
-        >>>         num_blocks=(4, 4, 4, 4),
-        >>>         num_channels=(32, 64, 128, 256)))
-        >>> self = HRNet(extra, in_channels=1)
-        >>> self.eval()
-        >>> inputs = torch.rand(1, 1, 32, 32)
-        >>> level_outputs = self.forward(inputs)
-        >>> for level_out in level_outputs:
-        ...     print(tuple(level_out.shape))
-        (1, 32, 8, 8)
-        (1, 64, 4, 4)
-        (1, 128, 2, 2)
-        (1, 256, 1, 1)
     """
 
     blocks_dict = {'BASIC': BasicBlock, 'BOTTLENECK': Bottleneck}
@@ -279,6 +232,15 @@ class HRNet(nn.Module):
                  with_cp=False,
                  zero_init_residual=False):
         super(HRNet, self).__init__()
+        # extra = {'stage1': {'num_modules': 1, 'num_branches': 1, 'block': 'BOTTLENECK', 'num_blocks': (2,), 'num_channels': (64,)}, 'stage2': {'num_modules': 1, 'num_branches': 2, 'block': 'BASIC', 'num_blocks': (2, 2), 'num_channels': (18, 36)}, 'stage3': {'num_modules': 3, 'num_branches': 3, 'block': 'BASIC', 'num_blocks': (2, 2, 2), 'num_channels': (18, 36, 72)}, 'stage4': {'num_modules': 2, 'num_branches': 4, 'block': 'BASIC', 'num_blocks': (2, 2, 2, 2), 'num_channels': (18, 36, 72, 144)}}
+        # in_channels = 3
+        # conv_cfg = None
+        # norm_cfg = {'type': 'SyncBN', 'requires_grad': True}
+        # norm_eval = False
+        # with_cp = False
+        # zero_init_residual = False
+
+
         self.extra = extra
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
@@ -310,7 +272,7 @@ class HRNet(nn.Module):
             bias=False)
 
         self.add_module(self.norm2_name, norm2)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
 
         # stage 1
         self.stage1_cfg = self.extra['stage1']
@@ -357,15 +319,19 @@ class HRNet(nn.Module):
                                                        num_channels)
         self.stage4, pre_stage_channels = self._make_stage(
             self.stage4_cfg, num_channels)
+        # ==> pdb.set_trace()
 
     @property
     def norm1(self):
         """nn.Module: the normalization layer named "norm1" """
+        # ==> pdb.set_trace()
+        # self.norm1_name -- 'bn1'
         return getattr(self, self.norm1_name)
 
     @property
     def norm2(self):
         """nn.Module: the normalization layer named "norm2" """
+        # self.norm2_name -- bn2
         return getattr(self, self.norm2_name)
 
     def _make_transition_layer(self, num_channels_pre_layer,
@@ -390,7 +356,7 @@ class HRNet(nn.Module):
                                 bias=False),
                             build_norm_layer(self.norm_cfg,
                                              num_channels_cur_layer[i])[1],
-                            nn.ReLU(inplace=True)))
+                            nn.ReLU()))
                 else:
                     transition_layers.append(None)
             else:
@@ -410,7 +376,7 @@ class HRNet(nn.Module):
                                 padding=1,
                                 bias=False),
                             build_norm_layer(self.norm_cfg, out_channels)[1],
-                            nn.ReLU(inplace=True)))
+                            nn.ReLU()))
                 transition_layers.append(nn.Sequential(*conv_downsamples))
 
         return nn.ModuleList(transition_layers)
@@ -488,24 +454,11 @@ class HRNet(nn.Module):
             pretrained (str, optional): Path to pre-trained weights.
                 Defaults to None.
         """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=False, logger=logger)
-        elif pretrained is None:
-            for m in self.modules():
-                if isinstance(m, nn.Conv2d):
-                    kaiming_init(m)
-                elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
-                    constant_init(m, 1)
-
-            if self.zero_init_residual:
-                for m in self.modules():
-                    if isinstance(m, Bottleneck):
-                        constant_init(m.norm3, 0)
-                    elif isinstance(m, BasicBlock):
-                        constant_init(m.norm2, 0)
-        else:
-            raise TypeError('pretrained must be a str or None')
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                kaiming_init(m)
+            elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
+                constant_init(m, 1)
 
     def forward(self, x):
         """Forward function."""
@@ -542,14 +495,16 @@ class HRNet(nn.Module):
                 x_list.append(y_list[i])
         y_list = self.stage4(x_list)
 
+        pdb.set_trace()
+
         return y_list
 
-    def train(self, mode=True):
-        """Convert the model into training mode whill keeping the normalization
-        layer freezed."""
-        super(HRNet, self).train(mode)
-        if mode and self.norm_eval:
-            for m in self.modules():
-                # trick: eval have effect on BatchNorm only
-                if isinstance(m, _BatchNorm):
-                    m.eval()
+    # def train(self, mode=True):
+    #     """Convert the model into training mode whill keeping the normalization
+    #     layer freezed."""
+    #     super(HRNet, self).train(mode)
+    #     if mode and self.norm_eval:
+    #         for m in self.modules():
+    #             # trick: eval have effect on BatchNorm only
+    #             if isinstance(m, _BatchNorm):
+    #                 m.eval()

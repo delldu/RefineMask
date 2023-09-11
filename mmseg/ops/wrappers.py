@@ -3,7 +3,7 @@ import warnings
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import pdb
 
 def resize(input,
            size=None,
@@ -33,20 +33,27 @@ class Upsample(nn.Module):
 
     def __init__(self,
                  size=None,
-                 scale_factor=None,
+                 scale_factor=2.0,
                  mode='nearest',
-                 align_corners=None):
+                 align_corners=False):
         super(Upsample, self).__init__()
+        # size = None
+        # scale_factor = 2
+        # mode = 'bilinear'
+        # align_corners = False
+
         self.size = size
-        if isinstance(scale_factor, tuple):
-            self.scale_factor = tuple(float(factor) for factor in scale_factor)
-        else:
-            self.scale_factor = float(scale_factor) if scale_factor else None
+        # if isinstance(scale_factor, tuple):
+        #     self.scale_factor = tuple(float(factor) for factor in scale_factor)
+        # else:
+        #     self.scale_factor = float(scale_factor) if scale_factor else None
+
+        self.scale_factor = float(scale_factor)
         self.mode = mode
         self.align_corners = align_corners
 
     def forward(self, x):
-        if not self.size:
+        if not self.size: #True
             size = [int(t * self.scale_factor) for t in x.shape[-2:]]
         else:
             size = self.size

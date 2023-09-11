@@ -94,7 +94,7 @@ class SplitAttentionConv2d(nn.Module):
         self.norm0_name, norm0 = build_norm_layer(
             norm_cfg, channels * radix, postfix=0)
         self.add_module(self.norm0_name, norm0)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
         self.fc1 = build_conv_layer(
             None, channels, inter_channels, 1, groups=self.groups)
         self.norm1_name, norm1 = build_norm_layer(

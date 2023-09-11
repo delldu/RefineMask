@@ -6,115 +6,7 @@ Home-page: http://github.com/open-mmlab/mmsegmentation
 Author: MMSegmentation Authors
 Author-email: openmmlab@gmail.com
 License: Apache License 2.0
-Description: <div align="center">
-          <img src="resources/mmseg-logo.png" width="600"/>
-        </div>
-        <br />
-        
-        [![PyPI](https://img.shields.io/pypi/v/mmsegmentation)](https://pypi.org/project/mmsegmentation)
-        [![docs](https://img.shields.io/badge/docs-latest-blue)](https://mmsegmentation.readthedocs.io/en/latest/)
-        [![badge](https://github.com/open-mmlab/mmsegmentation/workflows/build/badge.svg)](https://github.com/open-mmlab/mmsegmentation/actions)
-        [![codecov](https://codecov.io/gh/open-mmlab/mmsegmentation/branch/master/graph/badge.svg)](https://codecov.io/gh/open-mmlab/mmsegmentation)
-        [![license](https://img.shields.io/github/license/open-mmlab/mmsegmentation.svg)](https://github.com/open-mmlab/mmsegmentation/blob/master/LICENSE)
-        [![issue resolution](https://isitmaintained.com/badge/resolution/open-mmlab/mmsegmentation.svg)](https://github.com/open-mmlab/mmsegmentation/issues)
-        [![open issues](https://isitmaintained.com/badge/open/open-mmlab/mmsegmentation.svg)](https://github.com/open-mmlab/mmsegmentation/issues)
-        
-        Documentation: https://mmsegmentation.readthedocs.io/
-        
-        ## Introduction
-        
-        MMSegmentation is an open source semantic segmentation toolbox based on PyTorch.
-        It is a part of the OpenMMLab project.
-        
-        The master branch works with **PyTorch 1.3 to 1.6**.
-        
-        ![demo image](resources/seg_demo.gif)
-        
-        ### Major features
-        
-        - **Unified Benchmark**
-        
-          We provide a unified benchmark toolbox for various semantic segmentation methods.
-        
-        - **Modular Design**
-        
-          We decompose the semantic segmentation framework into different components and one can easily construct a customized semantic segmentation framework by combining different modules.
-        
-        - **Support of multiple methods out of box**
-        
-          The toolbox directly supports popular and contemporary semantic segmentation frameworks, *e.g.* PSPNet, DeepLabV3, PSANet, DeepLabV3+, etc.
-        
-        - **High efficiency**
-        
-          The training speed is faster than or comparable to other codebases.
-        
-        ## License
-        
-        This project is released under the [Apache 2.0 license](LICENSE).
-        
-        ## Changelog
-        
-        v0.7.0 was released in 07/10/2020.
-        Please refer to [changelog.md](docs/changelog.md) for details and release history.
-        
-        ## Benchmark and model zoo
-        
-        Results and models are available in the [model zoo](docs/model_zoo.md).
-        
-        Supported backbones:
-        
-        - [x] ResNet
-        - [x] ResNeXt
-        - [x] [HRNet](configs/hrnet/README.md)
-        - [x] [ResNeSt](configs/resnest/README.md)
-        - [x] [MobileNetV2](configs/mobilenet_v2/README.md)
-        
-        Supported methods:
-        
-        - [x] [FCN](configs/fcn)
-        - [x] [PSPNet](configs/pspnet)
-        - [x] [DeepLabV3](configs/deeplabv3)
-        - [x] [PSANet](configs/psanet)
-        - [x] [DeepLabV3+](configs/deeplabv3plus)
-        - [x] [UPerNet](configs/upernet)
-        - [x] [NonLocal Net](configs/nonlocal_net)
-        - [x] [EncNet](configs/encnet)
-        - [x] [CCNet](configs/ccnet)
-        - [x] [DANet](configs/danet)
-        - [x] [GCNet](configs/gcnet)
-        - [x] [ANN](configs/ann)
-        - [x] [OCRNet](configs/ocrnet)
-        - [x] [Fast-SCNN](configs/fastscnn)
-        - [x] [Semantic FPN](configs/sem_fpn)
-        - [x] [PointRend](configs/point_rend)
-        - [x] [EMANet](configs/emanet)
-        - [x] [DNLNet](configs/dnlnet)
-        - [x] [Mixed Precision (FP16) Training](configs/fp16/README.md)
-        
-        ## Installation
-        
-        Please refer to [INSTALL.md](docs/install.md) for installation and dataset preparation.
-        
-        ## Get Started
-        
-        Please see [getting_started.md](docs/getting_started.md) for the basic usage of MMSegmentation.
-        There are also tutorials for [adding new dataset](docs/tutorials/new_dataset.md), [designing data pipeline](docs/tutorials/data_pipeline.md), and [adding new modules](docs/tutorials/new_modules.md).
-        
-        A Colab tutorial is also provided. You may preview the notebook [here](demo/MMSegmentation_Tutorial.ipynb) or directly [run](https://colab.research.google.com/github/open-mmlab/mmsegmentation/blob/master/demo/MMSegmentation_Tutorial.ipynb) on Colab.
-        
-        ## Contributing
-        
-        We appreciate all contributions to improve MMSegmentation. Please refer to [CONTRIBUTING.md](.github/CONTRIBUTING.md) for the contributing guideline.
-        
-        ## Acknowledgement
-        
-        MMSegmentation is an open source project that welcome any contribution and feedback.
-        We wish that the toolbox and benchmark could serve the growing research
-        community by providing a flexible as well as standardized toolkit to reimplement existing methods
-        and develop their own new semantic segmentation methods.
-        
 Keywords: computer vision,semantic segmentation
-Platform: UNKNOWN
 Classifier: Development Status :: 4 - Beta
 Classifier: License :: OSI Approved :: Apache Software License
 Classifier: Operating System :: OS Independent
@@ -126,3 +18,234 @@ Provides-Extra: all
 Provides-Extra: tests
 Provides-Extra: build
 Provides-Extra: optional
+License-File: LICENSE
+
+# Look Closer to Segment Better: Boundary Patch Refinement for Instance Segmentation (CVPR 2021)
+
+This is the official repo for ["Look Closer to Segment Better: Boundary Patch Refinement for Instance Segmentation"](https://arxiv.org/abs/2104.05239).
+
+
+## Updates
+
+* [2022-12-25]: Added a [demo](demo/inference_img.ipynb) for refining on a single image more conveniently.
+
+## Introduction
+
+PBR is a conceptually simple yet effective post-processing refinement framework to improve the boundary quality of instance segmentation. Following the idea of looking closer to segment boundaries better, BPR extracts and refines a series of small boundary patches along the predicted instance boundaries. The proposed BPR framework (as shown below) yields significant improvements over the Mask R-CNN baseline on the Cityscapes benchmark, especially on the boundary-aware metrics. 
+
+
+<p align="center">
+<img src="framework.png" width="80%" alt="framework"/>
+</p>
+
+For more details, please refer to our [paper](https://arxiv.org/abs/2104.05239).
+
+## Installation
+
+Please refer to [INSTALL.md](docs/install.md).
+
+
+## Training
+
+In this and the next section, we introduce how to train and inference BPR on the Cityscapes dataset. 
+If you want to apply it to a COCO-like dataset, please refer to the section [on-other-datasets](https://github.com/tinyalpha/BPR#on-other-datasets).
+
+We assume that the Cityscapes dataset is placed as follows:
+```
+BPR
+├── data
+│   ├── cityscapes
+│   │   ├── annotations
+│   │   ├── leftImg8bit
+│   │   │   ├── train
+│   │   │   ├── val
+│   │   ├── gtFine
+│   │   │   ├── train
+│   │   │   ├── val
+```
+
+
+
+### Prepare patches dataset [optional]
+
+First, you need to generate the instance segmentation results on the Cityscapes training and validation set, as the following format:
+
+```
+maskrcnn_train
+- aachen_000000_000019_leftImg8bit_pred.txt
+- aachen_000001_000019_leftImg8bit_0_person.png
+- aachen_000001_000019_leftImg8bit_10_car.png
+- ...
+
+maskrcnn_val
+- frankfurt_000001_064130_leftImg8bit_pred.txt
+- frankfurt_000001_064305_leftImg8bit_0_person.png
+- frankfurt_000001_064305_leftImg8bit_10_motorcycle.png
+- ...
+```
+
+The content of the txt file is the same as the standard format required by [cityscape script](https://github.com/mcordts/cityscapesScripts/blob/master/cityscapesscripts/evaluation/evalInstanceLevelSemanticLabeling.py), e.g.:
+
+```
+frankfurt_000000_000294_leftImg8bit_0_person.png 24 0.9990299940109253
+frankfurt_000000_000294_leftImg8bit_1_person.png 24 0.9810258746147156
+...
+```
+
+Then use the provided script to generate the training set:
+
+```
+sh tools/prepare_dataset.sh \
+  maskrcnn_train \
+  maskrcnn_val \
+  maskrcnn_r50
+```
+Note that this step can take about 2 hours. Feel free to skip it by downloading the [processed training set](https://cloud.tsinghua.edu.cn/f/ea643dc32f824dbba28a/?dl=1).
+
+
+### Train the network
+
+Point `DATA_ROOT` to the patches dataset and run the training script 
+
+```
+DATA_ROOT=maskrcnn_r50/patches \
+bash tools/dist_train.sh \
+  configs/bpr/hrnet18s_128.py \
+  4
+```
+
+
+## Inference
+
+Suppose you have some instance segmentation results of Cityscapes dataset, as the following format:
+
+```
+maskrcnn_val
+- frankfurt_000001_064130_leftImg8bit_pred.txt
+- frankfurt_000001_064305_leftImg8bit_0_person.png
+- frankfurt_000001_064305_leftImg8bit_10_motorcycle.png
+- ...
+```
+
+We provide a script ([tools/inference.sh](tools/inference.sh)) to perform refinement operation, usage:
+
+```
+IOU_THRESH=0.55 \
+IMG_DIR=data/cityscapes/leftImg8bit/val \
+GT_JSON=data/cityscapes/annotations/instancesonly_filtered_gtFine_val.json \
+BPR_ROOT=. \
+GPUS=4 \
+sh tools/inference.sh configs/bpr/hrnet48_256.py ckpts/hrnet48_256.pth maskrcnn_val maskrcnn_val_refined
+```
+
+The refinement results will be saved in `maskrcnn_val_refined/refined`.
+
+
+## On other datasets
+
+We also provide training and inference scripts suitable for the COCO dataset.
+For those who want to apply BPR to their own datasets, we recommend converting them to the COCO format first.
+
+We assume that the folder structure of the COCO data set is as follows:
+
+```
+BPR
+├── data
+│   ├── coco
+│   │   ├── annotations
+│   │   ├── train2017
+│   │   ├── val2017
+│   │   ├── test2017
+```
+
+
+### Training
+
+First, a binary segmentation dataset needs to be constructed for training and validation of the Refinement Network.
+
+This step requires coarse segmentation results (can come from any instance segmenter) on the training set and validation set of COCO. Assuming that these two files are `mask_rcnn_r50.train.segm.json` and `mask_rcnn_r50.val.segm.json`, you only need to execute the following commands:
+
+```
+IOU_THRESH=0.15 \
+sh tools/prepare_dataset_coco.sh \
+  mask_rcnn_r50.train.segm.json \
+  mask_rcnn_r50.val.segm.json \
+  maskrcnn_r50 \
+  70000
+```
+
+The dataset will be saved in `maskrcnn_r50/patches`. 
+
+`IOU_THRESH=0.15` is used to control the threshold of nms.
+
+The last argument (70000) means that only 70000 instances are sampled as the training set, since there are too many instances in the COCO dataset.
+If you find that your computer cannot hold so many patches, you can try to reduce this value (may harm performance). 
+
+In our paper, we used these two values for COCO dataset.
+
+\
+After building the dataset, use the following commands to train the Refinement Network:
+
+```
+DATA_ROOT=maskrcnn_r50/patches \
+bash tools/dist_train.sh \
+  configs/bpr/hrnet18s_128.py \
+  4
+```
+
+### Inference
+
+Use the following command to run inference:
+
+```
+IOU_THRESH=0.25 \
+IMG_DIR=data/coco/val2017 \
+GT_JSON=data/coco/annotations/instances_val2017.json \
+GPUS=4 \
+sh tools/inference_coco.sh \
+  configs/bpr/hrnet18s_128.py \
+  hrnet18s_coco-c172955f.pth \
+  mask_rcnn_r50.val.segm.json \
+  mask_rcnn_r50.val.refined.json
+```
+
+`IOU_THRESH` means the threshold of nms (see our paper for details). 
+
+`IMG_DIR` and `GT_JSON` indicate the image folder and ground truth json file of COCO dataset.
+
+`configs/bpr/hrnet18s_128.py` and `hrnet18s_coco-c172955f.pth` indicate the config file and checkpoint of Refinement Network.
+
+`mask_rcnn_r50.val.segm.json` is the coasre instance segmentation results to be refined.
+
+`mask_rcnn_r50.val.refined.json` saved the refined results.
+
+
+## On single image
+
+See [demo/inference_img.ipynb](demo/inference_img.ipynb) and [demo/inference_img.py](demo/inference_img.py) for a demo usage.
+
+
+## Models
+
+| Backbone | Dataset | Config | Checkpoint |
+| :------: | :------: | :------: | :------: |
+| HRNet-18s | Cityscapes | [hrnet18s_128.py](configs/bpr/hrnet18s_128.py) | [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/f/a15da4d679654111ba89/?dl=1) |
+| HRNet-48 | Cityscapes | [hrnet48_256.py](configs/bpr/hrnet48_256.py) | [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/f/54d7c737540444b38b18/?dl=1) |
+| HRNet-18s | COCO | [hrnet18s_128.py](configs/bpr/hrnet18s_128.py) | [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/f/342fae1311b748a8b396/?dl=1) |
+
+## Acknowledgement
+
+This project is based on [mmsegmentation](https://github.com/open-mmlab/mmsegmentation) code base.
+
+## Citation
+
+If you find this project useful in your research, please consider citing:
+
+```
+@article{tang2021look,
+  title={Look Closer to Segment Better: Boundary Patch Refinement for Instance Segmentation},
+  author={Chufeng Tang and Hang Chen and Xiao Li and Jianmin Li and Zhaoxiang Zhang and Xiaolin Hu},
+  journal={arXiv preprint arXiv:2104.05239},
+  year={2021}
+}
+```

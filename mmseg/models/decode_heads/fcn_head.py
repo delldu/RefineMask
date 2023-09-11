@@ -4,7 +4,7 @@ from mmcv.cnn import ConvModule
 
 from ..builder import HEADS
 from .decode_head import BaseDecodeHead
-
+import pdb
 
 @HEADS.register_module()
 class FCNHead(BaseDecodeHead):
@@ -22,8 +22,16 @@ class FCNHead(BaseDecodeHead):
     def __init__(self,
                  num_convs=2,
                  kernel_size=3,
-                 concat_input=True,
+                 concat_input=False,
                  **kwargs):
+        # (Pdb) kwargs
+        # {'in_channels': [18, 36, 72, 144], 'in_index': (0, 1, 2, 3), 
+        #     'channels': 270, 'input_transform': 'resize_concat', 
+        #     'dropout_ratio': -1, 'num_classes': 2, 
+        #     'norm_cfg': {'type': 'SyncBN', 'requires_grad': True}, 
+        #     'align_corners': False, 'loss_decode': {'type': 'CrossEntropyLoss', 
+        #         'use_sigmoid': False, 'loss_weight': 1.0}}
+
         assert num_convs > 0
         self.num_convs = num_convs
         self.concat_input = concat_input
@@ -50,7 +58,7 @@ class FCNHead(BaseDecodeHead):
                     norm_cfg=self.norm_cfg,
                     act_cfg=self.act_cfg))
         self.convs = nn.Sequential(*convs)
-        if self.concat_input:
+        if self.concat_input: # False
             self.conv_cat = ConvModule(
                 self.in_channels + self.channels,
                 self.channels,
@@ -64,7 +72,5 @@ class FCNHead(BaseDecodeHead):
         """Forward function."""
         x = self._transform_inputs(inputs)
         output = self.convs(x)
-        if self.concat_input:
-            output = self.conv_cat(torch.cat([x, output], dim=1))
         output = self.cls_seg(output)
         return output

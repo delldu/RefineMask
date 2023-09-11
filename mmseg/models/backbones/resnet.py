@@ -8,7 +8,7 @@ from mmcv.utils.parrots_wrapper import _BatchNorm
 from mmseg.utils import get_root_logger
 from ..builder import BACKBONES
 from ..utils import ResLayer
-
+import pdb
 
 class BasicBlock(nn.Module):
     """Basic block for ResNet."""
@@ -48,7 +48,7 @@ class BasicBlock(nn.Module):
             conv_cfg, planes, planes, 3, padding=1, bias=False)
         self.add_module(self.norm2_name, norm2)
 
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU() # inplace=True)
         self.downsample = downsample
         self.stride = stride
         self.dilation = dilation
@@ -84,7 +84,9 @@ class BasicBlock(nn.Module):
 
             return out
 
-        if self.with_cp and x.requires_grad:
+        # self.with_cp -- False
+        # x.requires_grad -- True
+        if self.with_cp and x.requires_grad: # False
             out = cp.checkpoint(_inner_forward, x)
         else:
             out = _inner_forward(x)
@@ -205,7 +207,7 @@ class Bottleneck(nn.Module):
             bias=False)
         self.add_module(self.norm3_name, norm3)
 
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
         self.downsample = downsample
 
         if self.with_plugins:
@@ -542,7 +544,7 @@ class ResNet(nn.Module):
                     padding=1,
                     bias=False),
                 build_norm_layer(self.norm_cfg, stem_channels // 2)[1],
-                nn.ReLU(inplace=True),
+                nn.ReLU(),
                 build_conv_layer(
                     self.conv_cfg,
                     stem_channels // 2,
@@ -552,7 +554,7 @@ class ResNet(nn.Module):
                     padding=1,
                     bias=False),
                 build_norm_layer(self.norm_cfg, stem_channels // 2)[1],
-                nn.ReLU(inplace=True),
+                nn.ReLU(),
                 build_conv_layer(
                     self.conv_cfg,
                     stem_channels // 2,
@@ -562,7 +564,7 @@ class ResNet(nn.Module):
                     padding=1,
                     bias=False),
                 build_norm_layer(self.norm_cfg, stem_channels)[1],
-                nn.ReLU(inplace=True))
+                nn.ReLU())
         else:
             self.conv1 = build_conv_layer(
                 self.conv_cfg,
@@ -575,7 +577,7 @@ class ResNet(nn.Module):
             self.norm1_name, norm1 = build_norm_layer(
                 self.norm_cfg, stem_channels, postfix=1)
             self.add_module(self.norm1_name, norm1)
-            self.relu = nn.ReLU(inplace=True)
+            self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
     def _freeze_stages(self):

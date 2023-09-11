@@ -1,3 +1,4 @@
+LICENSE
 README.md
 setup.cfg
 setup.py
@@ -29,6 +30,7 @@ mmseg/datasets/dataset_wrappers.py
 mmseg/datasets/drive.py
 mmseg/datasets/hrf.py
 mmseg/datasets/pascal_context.py
+mmseg/datasets/refine.py
 mmseg/datasets/stare.py
 mmseg/datasets/voc.py
 mmseg/datasets/pipelines/__init__.py
@@ -42,9 +44,11 @@ mmseg/models/builder.py
 mmseg/models/backbones/__init__.py
 mmseg/models/backbones/fast_scnn.py
 mmseg/models/backbones/hrnet.py
+mmseg/models/backbones/hrnet_refine.py
 mmseg/models/backbones/mobilenet_v2.py
 mmseg/models/backbones/resnest.py
 mmseg/models/backbones/resnet.py
+mmseg/models/backbones/resnet_refine.py
 mmseg/models/backbones/resnext.py
 mmseg/models/backbones/unet.py
 mmseg/models/decode_heads/__init__.py
@@ -78,6 +82,7 @@ mmseg/models/segmentors/__init__.py
 mmseg/models/segmentors/base.py
 mmseg/models/segmentors/cascade_encoder_decoder.py
 mmseg/models/segmentors/encoder_decoder.py
+mmseg/models/segmentors/encoder_decoder_refine.py
 mmseg/models/utils/__init__.py
 mmseg/models/utils/inverted_residual.py
 mmseg/models/utils/make_divisible.py

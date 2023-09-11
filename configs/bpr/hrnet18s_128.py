@@ -8,13 +8,14 @@ _base_ = [
 ]
 
 # model settings
-norm_cfg = dict(type='SyncBN', requires_grad=True)
+# norm_cfg = dict(type='SyncBN', requires_grad=True)
+norm_cfg = dict(type='BN', requires_grad=True)
 model = dict(
     type='EncoderDecoderRefine',
     pretrained='open-mmlab://msra/hrnetv2_w18_small',
     backbone=dict(
         type='HRNetRefine',
-        norm_cfg=norm_cfg,
+        norm_cfg=dict(type='BN', requires_grad=True),
         norm_eval=False,
         extra=dict(
             stage1=dict(
@@ -52,7 +53,7 @@ model = dict(
         concat_input=False,
         dropout_ratio=-1,
         num_classes=2,
-        norm_cfg=norm_cfg,
+        norm_cfg=dict(type='BN', requires_grad=True),
         align_corners=False,
         loss_decode=dict(
             type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)))
