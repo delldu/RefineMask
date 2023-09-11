@@ -13,7 +13,7 @@ install:
 	python setup.py install
 
 uninstall:
-	pip uninstall RAM
+	pip uninstall RefineMask
 
 clean:
-	rm -rf build dist RAM.egg-info __pycache__
+	rm -rf build dist RefineMask.egg-info __pycache__
