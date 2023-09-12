@@ -31,18 +31,15 @@ def find_border(mask, kernel_size=3):
     """
     N, C, H, W = mask.size()
 
-    mask = (mask >= 0.5).to(torch.float32)
+    hi_mask = (mask > 0.90).to(torch.float32) # xxxx8888
 
     kernel = mask.new_ones((1, 1, kernel_size, kernel_size))
-    # tensor [kernel] size: [1, 1, 3, 3] , min && max: tensor(1., device='cuda:0') , 
-
-    border = F.conv2d(mask, kernel, stride=1, padding=kernel_size//2)
-    # tensor [border] size: [1, 1, 1024, 1024] , min: tensor(0., device='cuda:0') , max: tensor(9., device='cuda:0')
+    border = F.conv2d(hi_mask, kernel, stride=1, padding=kernel_size//2)
 
     bml = torch.abs(border - kernel_size*kernel_size)
     bms = torch.abs(border)
     border = torch.min(bml, bms) / (kernel_size*kernel_size/2)
-    # tensor [border] size: [1, 1, 1024, 1024] , min: tensor(0., device='cuda:0') , max: tensor(0.8889, device='cuda:0')
+    # tensor [border] size: [1, 1, 1024, 2048] , min: 0.0 , max: 0.8888888955116272
 
     return border
 
@@ -51,10 +48,6 @@ def get_bboxes(border, patch_size=64, iou_thresh=0.25):
     """
     B, C, H, W = border.size()
     assert B == 1 and C == 1, "Only support one batch size! "
-
-    # border.size() -- [1, 1, 1024, 1024]
-    # patch_size = 64
-    # iou_thresh = 0.25
 
     ys, xs = torch.nonzero(border[0, 0, :, :], as_tuple=True)
     scores = border[0, 0, ys,xs]
@@ -92,50 +85,63 @@ def get_bboxes(border, patch_size=64, iou_thresh=0.25):
     return bboxes # size() -- [70, 5]
 
 def roi_list(bboxes):
-    index = bboxes.new_zeros((bboxes.size(0), 1)) # size() -- [33, 1]
-    return torch.cat([index, bboxes[:, 0:4]], dim=1).float() # ==> size() -- [33, 5]
+    index = bboxes.new_zeros((bboxes.size(0), 1))
+    return torch.cat([index, bboxes[:, 0:4]], dim=1).float() # size() [33, 1] ==> [33, 5]
 
-
-def split(image, mask, border_width=3, iou_thresh=0.25, patch_size=64, out_size=128):
+def split(image, mask, border_width=3, patch_size=64, out_size=128):
     border = find_border(mask, border_width)
-    bboxes = get_bboxes(border, patch_size, iou_thresh) # size() -- [70, 5]
+    bboxes = get_bboxes(border, patch_size)
+    # tensor [bboxes] size: [33, 5] , min: 0.6666666865348816 , max: 1252.0
+
     crop_list = roi_list(bboxes)
 
     image_patches = roi_align(image, crop_list, patch_size)
     image_patches = F.interpolate(image_patches, (out_size, out_size), mode='bilinear')
+    # tensor [image_patches] size: [33, 3, 128, 128] , min: -1.9188287258148193 , max: 2.248908281326294
 
     mask_patches = roi_align(mask, crop_list, patch_size)
     mask_patches = F.interpolate(mask_patches, (out_size, out_size), mode='nearest')
+    # tensor [mask_patches] size: [33, 1, 128, 128] , min: 0.0 , max: 1.0
     mask_patches = 2.0 * mask_patches - 1.0 # convert from [0.0, 1.0] ==> [-1.0, 1.0]
-
-    # pdb.set_trace()
 
     return bboxes, torch.cat([image_patches, mask_patches], dim=1)
 
 
 def merge(mask, bboxes, mask_patches, patch_size=64):
     mask_patches = F.interpolate(mask_patches, (patch_size, patch_size), mode='bilinear')
-    target = mask.clone()    
-    i = 0
-    for b in bboxes:
-        x1 = int(b[0].item())
-        y1 = int(b[1].item())
-        x2 = int(b[2].item())
-        y2 = int(b[3].item())
-        target[:, :, y1:y2, x1:x2] = (mask_patches[i:i+1, :, :] < 0.5).to(torch.float32)
+
+    target = mask.clone()
+    mask_sum = torch.zeros_like(mask)
+    mask_count =torch.zeros_like(mask)
+
+    box_list = bboxes[:, 0:4].int()
+    for i, b in enumerate(box_list):
+        x1, y1, x2, y2 = b[0], b[1], b[2], b[3]
+
+        m_source = mask[:, :, y1:y2, x1:x2]
+        m_refine = mask_patches[i:i+1, :, :, :]
+
+        mask_sum[:, :, y1:y2, x1:x2] += m_source*m_refine # xxxx8888
+        mask_count[:, :, y1:y2, x1:x2] += 1.0
+
+    s = mask_count > 0
+    mask_sum[s] /= mask_count[s]
+
+    target[s] = mask_sum[s]
     return target
 
 
 def inference_one(model, image):
     color = image[:, 0:3, :, :]
+    mask = image[:, 3:4, :, :]
+
     image_normal = T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     color = image_normal(color)
 
-    mask = image[:, 3:4, :, :]
     bboxes, input_patches = split(color, mask)
 
     with torch.no_grad():
-        output_patches = model(input_patches)
+        output_patches = model(input_patches) # size() -- [33, 4, 128, 128]
     
     mask_patches = output_patches[:, 1:2, :, :]
 
@@ -206,7 +212,9 @@ def predict(input_files, output_dir):
 
         output_file = f"{output_dir}/{os.path.basename(filename)}"
         output_tensor = input_tensor.clone()
+        # output_tensor[:, 3:4, :, :] = 1.0 - find_border(input_tensor[:, 3:4, :, :])
         output_tensor[:, 3:4, :, :] = refine_mask
+        # output_tensor[:, 3:4, :, :] = find_border(input_tensor[:, 3:4, :, :])
 
         todos.data.save_tensor([input_tensor, output_tensor], output_file)
 
