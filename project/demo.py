@@ -11,4 +11,4 @@
 
 import RefineMask
 
-RefineMask.predict("images/*.png", "output")
+RefineMask.predict("images/0001.png", "output")

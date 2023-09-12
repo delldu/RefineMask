@@ -3,6 +3,10 @@
 # Licensed under the MIT License.
 # Written by RainbowSecret (yhyuan@pku.edu.cn)
 # ------------------------------------------------------------------------------
+# The following code main comes from 
+# https://github.com/HRNet/HRNet-Semantic-Segmentation.git/hrnet.py
+# Thanks guys !!!
+
 from yacs.config import CfgNode as CN
 
 import os
@@ -102,14 +106,14 @@ class FCNHead(nn.Module):
                 self.channels,
                 kernel_size=kernel_size,
                 padding=kernel_size // 2))
-        for i in range(num_convs - 1):
-            convs.append(
-                ConvModule(
-                    self.channels,
-                    self.channels,
-                    kernel_size=kernel_size,
-                    padding=kernel_size // 2,
-                    ))
+        # for i in range(num_convs - 1): # for num_convs == 1
+        #     convs.append(
+        #         ConvModule(
+        #             self.channels,
+        #             self.channels,
+        #             kernel_size=kernel_size,
+        #             padding=kernel_size // 2,
+        #             ))
         self.convs = nn.Sequential(*convs)
 
 
@@ -612,7 +616,6 @@ class RefineMask(nn.Module):
 
     def forward(self, image):
         B, C, H, W = image.size()
-
         x = self.backbone(image)
         x = self.decode_head(x)
         x = F.interpolate(x, size=(H, W), mode='bilinear', align_corners=False)
