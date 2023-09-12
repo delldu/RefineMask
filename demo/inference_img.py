@@ -10,35 +10,11 @@ from mmcv.ops.roi_align import roi_align
 from tqdm import tqdm
 from functools import partial
 from torch.utils.data import Dataset, DataLoader
-
+import todos
 from mmcv.runner import load_checkpoint
 from mmseg.models import build_segmentor
 from mmcv.parallel import MMDataParallel, DataContainer, collate
 import pdb
-
-def __output_kv__(prefix, k, v):
-    if isinstance(v, torch.Tensor):
-        print(f"{prefix}tensor [{k}] size:", list(v.size()), ", min:", v.min(), ", max:", v.max())
-    elif isinstance(v, np.ndarray):
-        print(f"{prefix}array [{k}] shape:", v.shape, ", min:", v.min(), ", max:", v.max())
-    elif isinstance(v, list):
-        print(f"{prefix}list [{k}] len:", len(v), ",", v)
-    elif isinstance(v, tuple):
-        print(f"{prefix}tuple [{k}] len:", len(v), ",", v)
-    elif isinstance(v, str):
-        print(f"{prefix}[{k}] value:", "'" + v + "'")
-    else:
-        print(f"{prefix}[{k}] value:", v)
-
-def debug_var(v_name, v_value):
-    if isinstance(v_value, dict):
-        prefix = "    "
-        print(f"{v_name} is dict:")
-        for k, v in v_value.items():
-            __output_kv__(prefix, k, v)
-    else:
-        prefix = ""
-        __output_kv__(prefix, v_name, v_value)
 
 def find_float_boundary(maskdt, kernel_size=3):
     """Find the boundaries.
@@ -189,8 +165,8 @@ def _build_model(cfg, ckpt, patch_size=64):
 
 
 def _to_rois(xyxys):
-    inds = xyxys.new_zeros((xyxys.size(0), 1))
-    return torch.cat([inds, xyxys], dim=1).float().contiguous()
+    inds = xyxys.new_zeros((xyxys.size(0), 1)) # size() -- [33, 1]
+    return torch.cat([inds, xyxys], dim=1).float().contiguous() # ==> size() -- [33, 5]
 
 
 def split(img, maskdts, boundary_width=3, iou_thresh=0.25, patch_size=64, out_size=128):
@@ -201,6 +177,7 @@ def split(img, maskdts, boundary_width=3, iou_thresh=0.25, patch_size=64, out_si
     # patch_size = 64
     # out_size = 128
     fbmasks = find_float_boundary(maskdts, boundary_width)
+    todos.debug.output_var("fbmasks", fbmasks)
 
     detss = []
     for i in range(fbmasks.size(0)):
@@ -208,31 +185,27 @@ def split(img, maskdts, boundary_width=3, iou_thresh=0.25, patch_size=64, out_si
         detss.append(dets)
 
     all_dets = torch.cat(detss, dim=0)
+    # tensor [all_dets] size: [33, 4] , min: tensor(362., device='cuda:0') , max: tensor(1252., device='cuda:0')
+
     img = img.permute(2,0,1).unsqueeze(0).float().contiguous()   # 1,3,H,W
     img_patches = roi_align(img, _to_rois(all_dets), patch_size)
-    # tensor [img_patches] size: [33, 3, 64, 64] , min: tensor(-2.0665, device='cuda:0') , max: tensor(2.4286, device='cuda:0')
-
-    _detss = [torch.cat([i*_.new_ones((_.size(0), 1)), _], dim=1) 
-        for i,_ in enumerate(detss)]
-    _detss = torch.cat(_detss)
-    dt_patches = roi_align(maskdts[:,None,:,:], _detss, patch_size)
-    # tensor [dt_patches] size: [33, 1, 64, 64] , min: tensor(0., device='cuda:0') , max: tensor(1., device='cuda:0')
-
     img_patches = F.interpolate(img_patches, (out_size, out_size), mode='bilinear')
-    # tensor [img_patches] size: [33, 3, 128, 128] , min: tensor(-1.9959, device='cuda:0') , max: tensor(2.3585, device='cuda:0')
+    todos.debug.output_var("img_patches", img_patches)
 
+
+    dt_patches = roi_align(maskdts[:,None,:,:], _to_rois(all_dets), patch_size)
     dt_patches = F.interpolate(dt_patches, (out_size, out_size), mode='nearest')
-    # tensor [dt_patches] size: [33, 1, 128, 128] , min: tensor(0., device='cuda:0') , max: tensor(1., device='cuda:0')
+    todos.debug.output_var("dt_patches", dt_patches)
 
-    return detss, torch.cat([img_patches, 2*dt_patches - 1], dim=1)
+    pdb.set_trace()
+
+    return detss, torch.cat([img_patches, 2*dt_patches - 1], dim=1) # [33, 4, 128, 128]
 
 
 def merge(maskdts, detss, maskss, patch_size=64):
-    # detss: list of dets (Ni,4), x1,y1,x2,y2 format, len K
-    # maskdts: (K, H, W)
-    # maskss (sum_i Ni, 128, 128)
     # tensor [maskdts] size: [1, 1024, 2048] , min: tensor(0., device='cuda:0') , max: tensor(1., device='cuda:0')
 
+    # detss: list of dets (Ni,4), x1,y1,x2,y2 format, len K
     # list [detss] len: 1 , [tensor([[ 855.,  363.,  919.,  427.],
     #         [1083.,  363., 1147.,  427.],
     #         ...

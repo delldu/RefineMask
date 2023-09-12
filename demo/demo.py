@@ -5,6 +5,10 @@ import torch
 import cv2
 import os
 import numpy as np
+
+from PIL import Image
+from torchvision.transforms import Compose, ToTensor
+
 import matplotlib.pyplot as plt
 from inference_img import _build_model, _build_dataloader, split, merge, debug_var
 import pdb
@@ -26,6 +30,7 @@ def _inference_one(img, sub_maskdts, sub_dt_paths):
     masks = model(patches)[:,1,:,:]    # [33, 2, 128, 128] ==> [33, 128, 128]              # N, 128, 128
     # tensor [masks] size: [33, 128, 128] , min: tensor(8.3961e-05, device='cuda:0', grad_fn=<MinBackward1>) , max: tensor(0.9999, device='cuda:0', grad_fn=<MaxBackward1>)
 
+    # sub_maskdts.size() -- [1, 1024, 2048]
     refineds = merge(sub_maskdts, dets, masks)
     # list [refineds] len: 1 , [tensor([[False, False, False,  ..., False, False, False],
     #         [False, False, False,  ..., False, False, False],
@@ -99,6 +104,15 @@ cv2.imwrite("/tmp/coarse.png", coarse_mask*255)
 cv2.imwrite("/tmp/refine.png", refine_mask[0])
 
 plt.show()
+
+import todos
+color = Image.open(img_paths[0]).convert("RGB")
+mask = Image.open("/tmp/coarse.png").convert("L")
+color_tensor = ToTensor()(color).unsqueeze(0)
+mask_tensor = ToTensor()(mask).unsqueeze(0)
+image_tensor = torch.cat((color_tensor, mask_tensor), dim=1)
+todos.data.save_tensor([image_tensor], "/tmp/0099.png")
+
 
 
 
